@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"github.com/matryer/way"
 	"github.com/prometheus/client_golang/prometheus"
-"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -25,12 +25,12 @@ import (
 )
 
 const (
-	limiterRate     = 0.1
-	limiterBurst    = 2
-	defaultGRPCPort = ":9090"
-	defaultPromPort = ":9091"
-	defaultAddr     = "localhost:8080"
-	defaultCfg      = "config.json"
+	limiterRate    = 0.1
+	limiterBurst   = 2
+	gRPCAddr       = "localhost:9090"
+	prometheusAddr = "localhost:9091"
+	defaultAddr    = "localhost:8080"
+	defaultCfg     = "config.json"
 )
 
 var (
@@ -61,16 +61,16 @@ func main() {
 
 	for _, key := range SliceVal(s.cfg.ToWatch) {
 		log.Printf("[INFO] Running watch for key '%s'", key)
-		go s.watchKV(ctx, key)
+		go s.watchKV(ctx, key, limiterRate, limiterBurst)
 	}
 
 	go s.captureReload(ctx, StringVal(configFile))
 
-	log.Printf("[INFO] gRPC health check listening on '%s'...", defaultGRPCPort)
-	go s.runGRPC(ctx)
+	log.Printf("[INFO] gRPC health check listening on '%s'...", gRPCAddr)
+	go s.runGRPC(ctx, gRPCAddr)
 
-	log.Printf("[INFO] Exposing Prometheus metrics on '%s'...", defaultPromPort)
-	go s.runPrometheus()
+	log.Printf("[INFO] Exposing Prometheus metrics on '%s'...", prometheusAddr)
+	go s.runPrometheus(prometheusAddr)
 
 	log.Printf("[INFO] Hello service with HTTP check listening on %s", *httpAddr)
 	log.Fatal(http.ListenAndServe(*httpAddr, s.router))
@@ -123,16 +123,16 @@ func (s *server) captureReload(ctx context.Context, cfgFile string) {
 	}
 }
 
-func (s *server) runPrometheus() {
+func (s *server) runPrometheus(addr string) {
 	http.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(defaultPromPort, nil)
+	http.ListenAndServe(addr, nil)
 }
 
 // Run a gRPC server exclusively for health checking
-func (s *server) runGRPC(ctx context.Context) {
-	lis, err := net.Listen("tcp", defaultGRPCPort)
+func (s *server) runGRPC(ctx context.Context, addr string) {
+	lis, err := net.Listen("tcp", addr)
 	if err != nil {
-		log.Fatalf("[ERR] grpc health: %v", defaultGRPCPort, err)
+		log.Fatalf("[ERR] grpc health: %v", addr, err)
 	}
 
 	gs := grpc.NewServer()
@@ -229,11 +229,11 @@ func (s *server) enableHealth() http.HandlerFunc {
 // watchKV watches a Key/Value pair in Consul for changes and sets the value internally
 // See below for implementation details:
 // https://www.consul.io/api/features/blocking.html#implementation-details
-func (s *server) watchKV(ctx context.Context, key string) {
+func (s *server) watchKV(ctx context.Context, key string, limit rate.Limit, burst int) {
 	var index uint64 = 1
 	var lastIndex uint64
 
-	limiter := rate.NewLimiter(limiterRate, limiterBurst)
+	limiter := rate.NewLimiter(limit, burst)
 
 	for {
 		// Wait until limiter allows request to happen

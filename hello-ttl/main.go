@@ -39,17 +39,17 @@ func main() {
 	defer cancel()
 
 	log.Printf("[INFO] Running TTL check keep-alive")
-	s.runTTL(ctx)
+	s.runTTL(ctx, ttlInterval)
 
 	for _, key := range SliceVal(s.cfg.ToWatch) {
 		log.Printf("[INFO] Running watch for key '%s'", key)
-		go s.watchKV(ctx, key)
+		go s.watchKV(ctx, key, limiterRate, limiterBurst)
 	}
 
-	go s.captureReload(ctx, *configFile)
+	go s.captureReload(ctx, StringVal(configFile))
 
 	log.Printf("[INFO] Hello service with TTL check listening on %s", *httpAddr)
-	log.Fatal(http.ListenAndServe(*httpAddr, s.router))
+	log.Fatal(http.ListenAndServe(StringVal(httpAddr), s.router))
 }
 
 type server struct {
@@ -136,8 +136,8 @@ func (s *server) enableHealth() http.HandlerFunc {
 	}
 }
 
-func (s *server) runTTL(ctx context.Context) {
-	ticker := time.NewTicker(ttlInterval)
+func (s *server) runTTL(ctx context.Context, interval time.Duration) {
+	ticker := time.NewTicker(interval)
 
 	httpClient := http.Client{
 		Timeout: time.Second * 10,
@@ -194,12 +194,12 @@ func (s *server) runTTL(ctx context.Context) {
 // watchKV watches a Key/Value pair in Consul for changes and sets the value internally
 // See below for implementation details:
 // https://www.consul.io/api/features/blocking.html#implementation-details
-func (s *server) watchKV(ctx context.Context, key string) {
+func (s *server) watchKV(ctx context.Context, key string, limit rate.Limit, burst int) {
 	var index uint64 = 1
 	var lastIndex uint64
 	var consulAddr, kvPath, svcName string
 
-	limiter := rate.NewLimiter(limiterRate, limiterBurst)
+	limiter := rate.NewLimiter(limit, burst)
 
 	for {
 		s.cfg.mu.RLock()

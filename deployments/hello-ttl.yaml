@@ -17,7 +17,6 @@ spec:
       containers:
       - name: hello-ttl
         image: freddygv/hello-ttl:v0.1.0
-        args: ["-addr=0.0.0.0:8080"]
         env:
         - name: HOST_IP
           valueFrom:
