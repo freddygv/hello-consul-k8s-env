@@ -1,4 +1,4 @@
-# Lab: Getting started with Consul on K8s
+# Consul Connect on Kubernetes
 
 ### Prerequisites
 - minikube
