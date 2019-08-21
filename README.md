@@ -37,21 +37,5 @@ Note that if you see the error: `Error: could not find a ready tiller pod`, helm
 
 `$ minikube service hedgehog-consul-ui`
 
-##### Dynamic Configuration
-* Get the list of pods and find one that is running a Consul agent. 
-We'll use this as an easy way to run Consul CLI commands.
-
-`$ kubectl get pods`
-
-* Look for one with consul in the name and connect to the running pod.
-
-`$ kubectl exec -it hedgehog-consul-5t2dc /bin/sh`
-
-* Once connected, run a command that saves a value to Consul.
-
-`$ consul kv put service/hello/hello-http/enable_checks false`
-
-* Switch to the Consul UI and note that the HTTP check for the hello service is failing.
-
 #### Teardown
 `minikube delete`
