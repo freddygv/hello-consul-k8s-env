@@ -1,4 +1,4 @@
-# Consul Connect on Kubernetes
+# Consul Connect on Kubernetes Sandbox
 
 ### Prerequisites
 - minikube
