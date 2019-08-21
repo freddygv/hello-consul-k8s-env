@@ -9,44 +9,39 @@
 #### Setup
 * Start minikube with 4GB to 8GB of memory.
 
-`$ minikube start --memory 8192`
+```$ minikube start --memory 8192```
 
 * Initialize helm on the minikube cluster.
 
-`$ helm init`
+```$ helm init```
 
 * Clone `consul-helm` to the current directory and checkout the latest release tag.
 
-`$ make deps`
+```$ make deps```
 
 * Open the Kubernetes dashboard.
 
-`minikube dashboard`
+```$ minikube dashboard```
 
 * Install the `consul-helm` chart with the config in `helm-consul-values.yaml`.
 
-`helm install -f helm-consul-values.yaml --name hedgehog ./consul-helm`
+```$ helm install -f helm-consul-values.yaml --name hedgehog ./consul-helm```
 
 Note that if you see the error: `Error: could not find a ready tiller pod`, helm has not finished initializing.
 
-* Configure coredns so that DNS requests with the `.consul` suffix are resolved by Consul. 
-See more [here](https://www.consul.io/docs/platform/k8s/dns.html).
-
-`./configure-dns.sh`
-
 * Deploy all applications to k8s:
 
-`kubectl create -f deployments/`
+```$ kubectl create -f deployments/```
 
 * Open Consul's web UI.
 
-`minikube service hedgehog-consul-ui`
+```$ minikube service hedgehog-consul-ui```
 
 ##### Dynamic Configuration
 * Get the list of pods and find one that is running a Consul agent. 
 We'll use this as an easy way to run Consul CLI commands.
 
-`$ kubectl get pods`
+```$ kubectl get pods```
 
 * Look for one with consul in the name and connect to the running pod.
 
