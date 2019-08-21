@@ -1,4 +1,4 @@
-module github.com/freddygv/consul-getting-started/hello-ttl
+module github.com/freddygv/hello-consul-k8s-env/hello-ttl
 
 go 1.12
 

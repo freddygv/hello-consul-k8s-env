@@ -1,4 +1,4 @@
-module github.com/freddygv/consul-getting-started/hello-http
+module github.com/freddygv/hello-consul-k8s-env/hello-http
 
 go 1.12
 
