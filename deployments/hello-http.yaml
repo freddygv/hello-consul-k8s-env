@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-http-deployment
+  labels:
+    app: hello-http
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello-http
+  template:
+    metadata:
+      labels:
+        app: hello-http
+    spec:
+      containers:
+      - name: hello-http
+        image: freddygv/hello-http:v0.1.0
+        args: ["-addr=0.0.0.0:8080"]
+        env:
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        livenessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 5
+      initContainers:
+      - name: hello-http-init
+        image: freddygv/hello-http-init:v0.1.0
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP

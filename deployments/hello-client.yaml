@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-client-deployment
+  labels:
+    app: hello-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello-client
+  template:
+    metadata:
+      labels:
+        app: hello-client
+    spec:
+      containers:
+      - name: hello-client
+        image: freddygv/hello-client:v0.1.0
+        env:
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+      initContainers:
+      - name: hello-client-init
+        image: freddygv/hello-client-init:v0.1.0
+        env:
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
