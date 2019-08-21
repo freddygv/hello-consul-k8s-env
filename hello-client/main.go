@@ -5,15 +5,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net"
 	"net/http"
 	"time"
 )
 
 const (
 	endpoint = "hello"
-	hostname = "hello.service.consul"
-	hostPort = "8080"
+	hostAddr = "localhost:8080"
 	interval = 2 * time.Second
 )
 
@@ -25,7 +23,7 @@ func main() {
 
 	ticker := time.NewTicker(interval)
 	for {
-		if err := requestHello(); err != nil {
+		if err := requestHello(hostAddr); err != nil {
 			log.Printf("[ERR] failed to dial hello service: %v", err)
 		}
 		if !*loop {
@@ -36,17 +34,9 @@ func main() {
 	}
 }
 
-func requestHello() error {
-	ips, err := net.LookupIP(hostname)
-	if err != nil || len(ips) == 0 {
-		return fmt.Errorf("could not find IP for '%s': %v", hostname, err)
-	}
-
-	// Use first result since they are shuffled by Consul
-	addr := ips[0].String()
-
+func requestHello(addr string) error {
 	// Use result to query Hello service
-	target := fmt.Sprintf("http://%s/%s", net.JoinHostPort(addr, hostPort), endpoint)
+	target := fmt.Sprintf("http://%s/%s", addr, endpoint)
 	resp, err := http.Get(target)
 	if err != nil {
 		return err

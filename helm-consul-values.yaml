@@ -16,6 +16,10 @@ server:
 # Configures Consul clients to run on every node
 client:
   enabled: true
+  grpc: true # Needed for Connect
+
+connectInject:
+  enabled: true
 
 # Configures consul-dns service that routes to all agents
 dns:

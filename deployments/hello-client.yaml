@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hello-client-deployment
+  name: hello-client
   labels:
     app: hello-client
 spec:
@@ -13,18 +13,15 @@ spec:
     metadata:
       labels:
         app: hello-client
+      annotations:
+        "consul.hashicorp.com/connect-inject": "true"
+        "consul.hashicorp.com/connect-service": "client"
+        "consul.hashicorp.com/connect-service-upstreams": "hello:8080"
     spec:
       containers:
       - name: hello-client
-        image: freddygv/hello-client:v0.1.0
-        env:
-        - name: HOST_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.hostIP
-      initContainers:
-      - name: hello-client-init
-        image: freddygv/hello-client-init:v0.1.0
+        image: freddygv/hello-client:v0.2.0
+        imagePullPolicy: Always
         env:
         - name: HOST_IP
           valueFrom:

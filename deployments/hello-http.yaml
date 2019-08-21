@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hello-http-deployment
+  name: hello-http
   labels:
     app: hello-http
 spec:
@@ -13,27 +13,18 @@ spec:
     metadata:
       labels:
         app: hello-http
+      annotations:
+        "consul.hashicorp.com/connect-inject": "true"
+        "consul.hashicorp.com/connect-service": "hello"
     spec:
       containers:
       - name: hello-http
-        image: freddygv/hello-http:v0.1.0
+        image: freddygv/hello-http:v0.2.0
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8080
+            name: http
         env:
-        - name: HOST_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.hostIP
-        livenessProbe:
-          tcpSocket:
-            port: 8080
-          initialDelaySeconds: 5
-      initContainers:
-      - name: hello-http-init
-        image: freddygv/hello-http-init:v0.1.0
-        env:
-        - name: POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
         - name: HOST_IP
           valueFrom:
             fieldRef:
