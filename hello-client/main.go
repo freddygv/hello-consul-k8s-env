@@ -11,7 +11,7 @@ import (
 
 const (
 	endpoint = "hello"
-	hostAddr = "localhost:8080"
+	hostAddr = "hello.default.svc.cluster.local:8080"
 	interval = 2 * time.Second
 )
 
@@ -35,13 +35,17 @@ func main() {
 }
 
 func requestHello(addr string) error {
-	// Use result to query Hello service
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
+
 	target := fmt.Sprintf("http://%s/%s", addr, endpoint)
-	resp, err := http.Get(target)
+	resp, err := client.Get(target)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
+	defer client.CloseIdleConnections()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

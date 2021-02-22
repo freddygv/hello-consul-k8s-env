@@ -1,41 +1,92 @@
-# Consul Connect on Kubernetes Sandbox
+# Kubernetes TransparentProxy MVP
 
 ### Prerequisites
-- minikube
+- kind
 - kubectl
 - helm
 
 ### Instructions
+
 #### Setup
-* Start minikube with 4GB to 8GB of memory.
+* Start a kind cluster.
 
-`$ minikube start --memory 8192`
+`kind create cluster --name consul-k8s`
 
-* Initialize helm on the minikube cluster.
+* If you need to load a new custom Consul build:
 
-`$ helm init`
+`make dev-docker`
+`docker tag (docker images | rg consul-dev | rg latest  | awk '{print $3}') freddygv/consul-dev:tproxy2-v0.05`
 
-* Clone `consul-helm` to the current directory and checkout the latest release tag.
+* Load customer image into kind cluster
 
-`$ make deps`
+`kind load --name consul-k8s docker-image freddygv/consul-dev:tproxy2-v0.05`
 
-* Open the Kubernetes dashboard.
+* If needed, update the helm chart's docker image to this one
 
-`$ minikube dashboard`
+* Apply the deployments
 
-* Install the `consul-helm` chart with the config in `helm-consul-values.yaml`.
+`kubectl apply -f deployments/`
 
-`$ helm install -f helm-consul-values.yaml --name hedgehog ./consul-helm`
+* Check logs for client, should see it working
 
-Note that if you see the error: `Error: could not find a ready tiller pod`, helm has not finished initializing.
+`kubectl logs -l "app=hello-client" -c hello-client`
 
-* Deploy all applications to k8s:
+* Install the consul helm chart with the config in `helm-consul-values.yaml`.
 
-`$ kubectl create -f deployments/`
+`helm install -f helm-consul-values.yaml consul hashicorp/consul --version "0.26.0"`
 
-* Open Consul's web UI.
+* Patch the server:
 
-`$ minikube service hedgehog-consul-ui`
+`kubectl patch deployment hello -p (cat ./patches/server.yaml | string split0)`
+
+* Patch client deployment
+
+`kubectl patch deployment hello-client -p (cat ./patches/client.yaml | string split0)`
+
+* Check logs for client, should be failing
+
+`kubectl logs -f -l "app=hello-client" -c hello-client`
+
+* Port forward Consul
+
+`kubectl port-forward consul-consul-server-0 8500:8500`
+
+* Write out proxy-default for TransparentProxy
+
+`bat defaults.hcl`
+`consul config write defaults.hcl`
+
+* Create an intention between it and the server
+
+`consul intention create client hello`
+
+* Check logs for client again, should see it working
+
+`kubectl logs -f -l "app=hello-client" -c hello-client`
+
+* Review Envoy config for client
+
+`kubectl port-forward deployment/hello-client 19000:19000`
+
+* Delete the intention between the client and server
+
+`consul intention delete client hello`
+
+* Check logs for client, should be failing again
+
+`kubectl logs -f -l "app=hello-client" -c hello-client`
+
+* Check Envoy logs
+
+`kubectl logs -f -l "app=hello-client" -c consul-connect-envoy-sidecar`
 
 #### Teardown
-`minikube delete`
+`kubectl delete -f deployments/`
+
+`helm del consul`
+
+`kubectl delete pvc -l release=consul`
+
+`kubectl get secret | grep consul | grep Opaque | grep token | awk '{print $1}' | xargs kubectl delete secret`
+
+`kind delete cluster --name consul-k8s`

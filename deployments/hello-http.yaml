@@ -1,25 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello
+spec:
+  selector:
+    app: hello
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: http
+
+---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hello-http
+  name: hello
   labels:
-    app: hello-http
+    app: hello
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: hello-http
+      app: hello
   template:
     metadata:
       labels:
-        app: hello-http
-      annotations:
-        "consul.hashicorp.com/connect-inject": "true"
-        "consul.hashicorp.com/connect-service": "hello"
+        app: hello
     spec:
       containers:
-      - name: hello-http
-        image: freddygv/hello-http:v0.2.0
+      - name: hello
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 101
+          runAsGroup: 101
+        image: freddygv/hello-http:v0.2.2
         imagePullPolicy: Always
         ports:
           - containerPort: 8080

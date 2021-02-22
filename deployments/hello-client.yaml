@@ -13,14 +13,14 @@ spec:
     metadata:
       labels:
         app: hello-client
-      annotations:
-        "consul.hashicorp.com/connect-inject": "true"
-        "consul.hashicorp.com/connect-service": "client"
-        "consul.hashicorp.com/connect-service-upstreams": "hello:8080"
     spec:
       containers:
       - name: hello-client
-        image: freddygv/hello-client:v0.2.0
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 101
+          runAsGroup: 101
+        image: freddygv/hello-client:v0.2.3
         imagePullPolicy: Always
         env:
         - name: HOST_IP

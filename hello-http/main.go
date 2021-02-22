@@ -29,7 +29,7 @@ const (
 	limiterBurst   = 2
 	gRPCAddr       = "localhost:9090"
 	prometheusAddr = "localhost:9091"
-	defaultAddr    = "localhost:8080"
+	defaultAddr    = "0.0.0.0:8080"
 	defaultCfg     = "config.json"
 )
 

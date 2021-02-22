@@ -8,6 +8,8 @@ RUN CGO_ENABLED=0 go build -o hello .
 
 FROM alpine:3.10
 COPY --from=builder /hello/hello /usr/bin/hello
+
+RUN apk add socat curl tcpdump
 RUN adduser -D hello
 USER hello
 ENTRYPOINT ["hello"]

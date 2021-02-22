@@ -8,6 +8,9 @@ RUN CGO_ENABLED=0 go build -o client .
 
 FROM alpine:3.10
 COPY --from=builder /client/client /usr/bin/client
-RUN adduser -D client
-USER client
+
+RUN apk add socat curl tcpdump
+#RUN adduser -D client
+#USER client
+
 ENTRYPOINT ["client"]

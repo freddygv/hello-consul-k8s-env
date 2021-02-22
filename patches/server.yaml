@@ -1,0 +1,36 @@
+spec:
+  template:
+    metadata:
+          annotations:
+            "consul.hashicorp.com/connect-inject": "true"
+    spec:
+      initContainers:
+        - args:
+            - -p # Port to redirect outbound traffic to
+            - "15001"
+            - -z # Port to redirect inbound traffic to
+            - "15006"
+            - -u # UID of user for which redirection isn't applied (Envoy)
+            - "0"
+            - -g # GID of user for which redirection isn't applied (Envoy)
+            - "0"
+
+            # TODO: See complete list in client.yaml
+            - -d # Outbound ports to exclude from redirection
+            - ""
+            - -o # Inbound ports to exclude from redirection
+            - ""
+            - -m
+            - REDIRECT
+            - -i # Redirect all outbound to Envoy
+            - '*'
+            - -b # Redirect all ports to Envoy
+            - '*'
+          image: kong-docker-kuma-docker.bintray.io/kuma-init:1.0.3
+          imagePullPolicy: IfNotPresent
+          name: kuma-init
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+            privileged: true

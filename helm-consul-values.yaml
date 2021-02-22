@@ -1,17 +1,12 @@
 global:
   enabled: true
-  domain: consul
-  image: "consul:1.5.0"
-  imageK8S: "hashicorp/consul-k8s:0.9.0"
   datacenter: dc1
+  image: "freddygv/consul-dev:tproxy2-v0.05"
 
 server:
   enabled: true
   replicas: 1
   bootstrapExpect: 1
-  disruptionBudget:
-    enabled: true
-    maxUnavailable: 0
 
 # Configures Consul clients to run on every node
 client:
@@ -20,6 +15,7 @@ client:
 
 connectInject:
   enabled: true
+  envoyExtraArgs: "-l trace"
 
 # Configures consul-dns service that routes to all agents
 dns:
@@ -28,4 +24,4 @@ dns:
 ui:
   enabled: true
   service:
-    type: NodePort
+    type: LoadBalancer
