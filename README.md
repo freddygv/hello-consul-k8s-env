@@ -12,7 +12,7 @@
 
 `kind create cluster --name consul-k8s`
 
-* If you need to load a new custom Consul build:
+* If you need to load a new custom Consul build, run these from the Consul repo:
 
 `make dev-docker`
 
