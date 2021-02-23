@@ -16,7 +16,7 @@
 
 `make dev-docker`
 
-`docker tag $(docker images | rg consul-dev | rg latest  | awk '{print $3}') freddygv/consul-dev:tproxy2-v0.06`
+`docker tag (docker images | rg consul-dev | rg latest  | awk '{print $3}') freddygv/consul-dev:tproxy2-v0.06`
 
 * Load customer image into kind cluster
 
@@ -38,13 +38,13 @@
 
 * Patch the server:
 
-`kubectl patch deployment hello -p "$(cat ./patches/server.yaml)"`
+`kubectl patch deployment hello -p (cat ./patches/server.yaml | string split0)`
 
 * Patch client deployment
 
-`kubectl patch deployment hello-client -p "$(cat ./patches/client.yaml)"`
+`kubectl patch deployment hello-client -p (cat ./patches/client.yaml | string split0)`
 
-* Check logs for client, should be failing after restarting
+* Check logs for client, should be failing
 
 `kubectl logs -f -l "app=hello-client" -c hello-client`
 
@@ -54,6 +54,7 @@
 
 * Write out proxy-default for TransparentProxy
 
+`bat defaults.hcl`
 `consul config write defaults.hcl`
 
 * Create an intention between it and the server

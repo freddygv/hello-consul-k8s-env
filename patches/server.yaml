@@ -17,7 +17,7 @@ spec:
 
             # TODO: See complete list in client.yaml
             - -d # Outbound ports to exclude from redirection
-            - ""
+            - ""    
             - -o # Inbound ports to exclude from redirection
             - ""
             - -m
