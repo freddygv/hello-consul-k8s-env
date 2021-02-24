@@ -17,7 +17,7 @@ const (
 
 func main() {
 	var (
-		loop      = flag.Bool("loop", true, "Make continuous requests to hello service.")
+		loop = flag.Bool("loop", true, "Make continuous requests to hello service.")
 	)
 	flag.Parse()
 

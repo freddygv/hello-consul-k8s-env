@@ -20,7 +20,7 @@ spec:
           runAsNonRoot: true
           runAsUser: 101
           runAsGroup: 101
-        image: freddygv/hello-client:v0.2.3
+        image: freddygv/hello-client:v0.2.4
         imagePullPolicy: Always
         env:
         - name: HOST_IP
