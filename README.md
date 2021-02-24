@@ -66,7 +66,6 @@
 
 `kubectl logs -f -l "app=hello-client" -c hello-client`
 
-#### Pending Fixes
 
 * Delete the intention between the client and server
 
@@ -75,6 +74,9 @@
 * Check logs for client, should fail, but it isn't at the moment.
 
 `kubectl logs -f -l "app=hello-client" -c hello-client`
+
+
+#### Debugging Envoy
 
 * Review Envoy config for client by forwarding the Envoy admin API port:
 

@@ -7,18 +7,20 @@
 
 ### Instructions
 
-#### Setup
-* Start a kind cluster.
+#### Building custom Consul binary
 
-`kind create cluster --name consul-k8s`
-
-* If you need to load a new custom Consul build:
+* If you need to load a custom Consul build, run these from the Consul repo:
 
 `make dev-docker`
 
 `docker tag (docker images | rg consul-dev | rg latest  | awk '{print $3}') freddygv/consul-dev:tproxy2-v0.06`
 
-* Load customer image into kind cluster
+#### Setup
+* Start a kind cluster.
+
+`kind create cluster --name consul-k8s`
+
+* IFF you built a custom Consul binary, load it into the kind cluster:
 
 `kind load --name consul-k8s docker-image freddygv/consul-dev:tproxy2-v0.06`
 
@@ -55,6 +57,7 @@
 * Write out proxy-default for TransparentProxy
 
 `bat defaults.hcl`
+
 `consul config write defaults.hcl`
 
 * Create an intention between it and the server
@@ -65,10 +68,6 @@
 
 `kubectl logs -f -l "app=hello-client" -c hello-client`
 
-* Review Envoy config for client
-
-`kubectl port-forward deployment/hello-client 19000:19000`
-
 * Delete the intention between the client and server
 
 `consul intention delete client hello`
@@ -77,9 +76,18 @@
 
 `kubectl logs -f -l "app=hello-client" -c hello-client`
 
+#### Debugging Envoy
+
+* Review Envoy config for client by forwarding the Envoy admin API port:
+
+`kubectl port-forward deployment/hello-client 19000:19000`
+
+Then navigate to: http://localhost:19000/config_dump
+
 * Check Envoy logs
 
 `kubectl logs -f -l "app=hello-client" -c consul-connect-envoy-sidecar`
+
 
 #### Teardown
 `kubectl delete -f deployments/`
