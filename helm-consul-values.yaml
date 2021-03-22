@@ -1,7 +1,7 @@
 global:
   enabled: true
   datacenter: dc1
-  image: "freddygv/consul-dev:tproxy2-v0.06"
+  image: "hashicorp/consul:1.10.0-alpha"
 
 server:
   enabled: true
@@ -15,7 +15,7 @@ client:
 
 connectInject:
   enabled: true
-  envoyExtraArgs: "-l trace"
+  # envoyExtraArgs: "-l trace"
 
 # Configures consul-dns service that routes to all agents
 dns:

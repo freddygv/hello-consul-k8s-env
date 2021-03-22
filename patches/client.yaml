@@ -3,31 +3,17 @@ spec:
     metadata:
           annotations:
             "consul.hashicorp.com/connect-inject": "true"
-            "consul.hashicorp.com/connect-service": "client"
     spec:
       initContainers:
         - args:
             - -p # Port to redirect outbound traffic to
             - "15001"
             - -z # Port to redirect inbound traffic to
-            - "15006"
+            - "20000"
             - -u # UID of user for which redirection isn't applied (Envoy)
             - "0"
             - -g # GID of user for which redirection isn't applied (Envoy)
             - "0"
-            
-            # TODO: Exclude traffic to local Consul ports (DNS/HTTP/HTTPS/etc)
-            #       Defaults can't be hardcoded here since users can overwrite them.
-
-            #       Also need to ignore ports for external scrapers like envoy_prometheus_bind_addr
-
-            #       Also need to ignore port for explicitly defined upstreams and escape hatched listeners:
-            #       https://istio.io/latest/docs/reference/config/networking/sidecar/#IstioEgressListener
-
-            #       Also need to account for the admin bind address of the Envoy listener if it is not listening on localhost:
-            #       https://www.consul.io/commands/connect/envoy#admin-bind
-            #       Is this even possible to override in consul-k8s?
-            
             - -d # Outbound ports to exclude from redirection
             - ""
             - -o # Inbound ports to exclude from redirection
