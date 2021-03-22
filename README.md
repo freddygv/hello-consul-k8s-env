@@ -95,20 +95,6 @@ Adding an intention that allows traffic between these two services will enable t
 
 What's changing here is not just that the hello server will accept the connection. In transparent proxy mode upstreams are inferred from intentions, so the client proxy's configuration adds or removes the hello server's endpoints.
 
-Show that ClusterIP is present in a filter chain match rule in the Envoy config.
-
-`kubectl exec deployment/hello-client -- nslookup hello`
-
-
-Set up port forwarding to access Envoy's admin API on the hello client pod.
-
-`kubectl port-forward deployment/hello-client 19000:19000`
-
-
-Note how there are filter chain matching rules that map the pod IP and Cluster IP.
-
-Uncomment the line with hello as an explicit upstream of the client and patch the client again.
-
 Test out making a request to a third party URL:
 
 `kubectl exec deployment/hello-client -- curl https://example.com`
