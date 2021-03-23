@@ -24,14 +24,12 @@ Traffic redirection in and out of the host allows applications to continue to ad
 - [Consul 1.10-alpha](https://releases.hashicorp.com/consul/) in your PATH
 
 
-#### Transparent Proxy
+### Steps
 Start a local Kubernetes kind cluster.
 
 `kind create cluster --name tproxy`
 
-Apply the deployments. This setup contains a simple client and server. 
-
-The client dials the server using kube-dns, and the server replies with "Hello World" (You can monitor the status of the deployment with `watch kubectl get pods`).
+Apply the deployments. This setup contains a simple client and server where the client dials the server using kube-dns, and the server replies with "Hello World". You can monitor the status of the deployment with `watch kubectl get pods`.
 
 `kubectl apply -f deployments/`
 
@@ -49,11 +47,11 @@ Wait for the Consul deployent to finish and all the pods to be ready. Once that 
 
 `kubectl port-forward consul-consul-server-0 8500:8500`
 
+Transparent proxying can be enabled in Consul with a new flag called `TransparentProxy`. This setting will allow Consul to configure Envoy under the assumption that traffic is being redirected into the proxy. In `defaults.hcl` we are setting the flag in a `proxy-defaults` config entry so that the setting applies to all services. Alternatively, the `TransparentProxy` flag can also be set in a `service-defaults` config entry or in the `Proxy` stanza of [proxy service registrations](https://www.consul.io/docs/connect/registration/service-registration#complete-configuration-example). Note that for the internal alpha the public-facing docs have not been updated to include the `TransparentProxy` flag.
 
-Submit a `proxy-defaults` config entry that enables "TransparentProxy" mode.
-This setting will allow Consul to configure Envoy under the assumption that traffic is being redirected into the proxy. By setting the flag in a `proxy-defaults` config entry it applies to all services.
+Enabling `TransparentProxy` is intended to be backwards compatible and should not break existing upstreams defined via Kubernetes pod annotations or proxy registrations on Consul. However, if traffic redirection rules are applied, users must ensure that the exlicitly defined upstream ports are excluded from redirection.
 
-This flag is intended to be backwards compatible and should not break existing upstreams defined via Kubernetes pod annotations or proxy registrations on Consul.
+Submit the config entry to enable transparent proxy mode:
 
 `consul config write defaults.hcl`
 
@@ -64,15 +62,15 @@ Next, the application deployments need to be patched. Patch the server first, th
 
 `kubectl patch deployment hello -p "$(cat ./patches/server-1.yaml)"`
 
-Traffic from the client should only be briefly interrupted during the restart because the server can still be reached directly.
+Traffic from the client should only be briefly interrupted during the restart because the server can still be reached directly at port 8080.
 
-Next patch the client deployment. This patch will add an Envoy sidecar proxy as well as a container that will apply iptables rules to redirect all inbound and outbound traffic through Envoy.
+Next patch the client deployment. This patch will add an Envoy sidecar proxy as well as an init-container that will apply iptables rules that redirect all inbound and outbound traffic through Envoy.
 
 `kubectl patch deployment hello-client -p "$(cat ./patches/client.yaml)"`
 
-Traffic from the client to the server will now be flowing through the mesh. The client application's request are now being captured, routed through Envoy, and then sent to the server's proxy.
+Traffic from the client to the server will now be flowing through the mesh. The client application's requests are being captured, routed through Envoy, and then forwarded to the server's proxy.
 
-To prevent services from dialing the server directly, apply a second patch to the server deployment. This will apply the iptables rules that redirect inbound and outbound traffic through Envoy.
+To prevent services from dialing the server directly (bypassing the proxy), apply a second patch to the server deployment. This will apply the iptables rules that redirect inbound and outbound traffic through Envoy.
 
 `kubectl patch deployment hello -p "$(cat ./patches/server-2.yaml)"`
 
@@ -93,15 +91,15 @@ Adding an intention that allows traffic between these two services will enable t
 
 `consul intention create hello-client hello`
 
-What's changing here is not just that the hello server will accept the connection. In transparent proxy mode upstreams are inferred from intentions, so the client proxy's configuration adds or removes the hello server's endpoints.
+What's changing here is not just that the hello server will accept the connection. In transparent proxy mode upstreams are inferred from intentions, so the client proxy's configuration adds or removes the hello server's endpoints as intentions change.
 
-Test out making a request to a third party URL:
+Lastly, test out making a request to a third party URL from the client pod:
 
 `kubectl exec deployment/hello-client -- curl https://example.com`
 
 Currently we allow traffic to destinations outside of the mesh without the need for an egress proxy or gateway. In an upcoming release we will provide a solution for authorization of traffic leaving the mesh. 
 
 
-#### Teardown
+### Teardown
 
 `kind delete cluster --name tproxy`
